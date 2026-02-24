@@ -9,69 +9,101 @@ import SwiftUI
 internal import Combine
 
 struct ContentView: View {
-    // タイマーの設定（秒単位）
     @State private var timeRemaining: CGFloat = 25 * 60
+    @State private var isActive = false
     let totalTime: CGFloat = 25 * 60
     
-    // タイマーの動作状態
-    @State private var isActive = false
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
+    // カラーテーマ（落ち着いたカフェ風）
+    let bgColor = Color(red: 0.95, green: 0.93, blue: 0.90)
+    let accentColor = Color(red: 0.4, green: 0.3, blue: 0.25) // コーヒーブラウン
+    
     var body: some View {
-        VStack(spacing: 40) {
-            ZStack {
-                // 背景の薄い円
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                
-                // 進捗を示す動く円
-                Circle()
-                    .trim(from: 0, to: timeRemaining / totalTime) // 残り時間比率
-                    .stroke(
-                        AngularGradient(gradient: Gradient(colors: [.orange, .red]), center: .center),
-                        style: StrokeStyle(lineWidth: 20, lineCap: .round)
-                    )
-                    .rotationEffect(.degrees(-90)) // 12時の位置から開始させる
-                    .animation(.easeInOut(duration: 1), value: timeRemaining)
-                
-                // 中央の時間表示
-                Text(formatTime(Int(timeRemaining)))
-                    .font(.system(size: 60, weight: .bold, design: .monospaced))
-            }
-            .frame(width: 280, height: 280)
+        ZStack {
+            // 背景色
+            bgColor.ignoresSafeArea()
             
-            // 操作ボタン
-            HStack(spacing: 30) {
-                Button(action: { isActive.toggle() }) {
-                    Image(systemName: isActive ? "pause.circle.fill" : "play.circle.fill")
-                        .resizable()
-                        .frame(width: 80, height: 80)
-                        .foregroundColor(isActive ? .orange : .green)
-                }
+            VStack(spacing: 50) {
+                // タイトル
+                Text(isActive ? "FOCUS TIME" : "READY?")
+                    .font(.system(size: 20, weight: .light, design: .serif))
+                    .tracking(8) // 文字間隔を広げておしゃれに
+                    .foregroundColor(accentColor)
                 
-                Button(action: resetTimer) {
-                    Image(systemName: "arrow.clockwise.circle.fill")
-                        .resizable()
-                        .frame(width: 60, height: 60)
-                        .foregroundColor(.gray)
+                // メインのタイマー部分
+                ZStack {
+                    // 外側の影（立体感）
+                    Circle()
+                        .fill(bgColor)
+                        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 10, y: 10)
+                        .shadow(color: Color.white, radius: 10, x: -5, y: -5)
+                    
+                    // 進捗リング（細めのラインで洗練された印象に）
+                    Circle()
+                        .trim(from: 0, to: timeRemaining / totalTime)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [accentColor.opacity(0.6), accentColor]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .padding(15) // 少し内側に配置
+                        .animation(.linear(duration: 1), value: timeRemaining)
+                    
+                    // 中央の時間表示
+                    VStack {
+                        Text(formatTime(Int(timeRemaining)))
+                            .font(.system(size: 54, weight: .thin, design: .monospaced))
+                            .foregroundColor(accentColor)
+                    }
+                }
+                .frame(width: 300, height: 300)
+                
+                // 操作ボタン
+                HStack(spacing: 40) {
+                    // 再生/一時停止
+                    Button(action: { isActive.toggle() }) {
+                        Circle()
+                            .fill(bgColor)
+                            .frame(width: 70, height: 70)
+                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 5, y: 5)
+                            .overlay(
+                                Image(systemName: isActive ? "pause" : "play.fill")
+                                    .foregroundColor(accentColor)
+                                    .font(.system(size: 24))
+                            )
+                    }
+                    
+                    // リセット
+                    Button(action: resetTimer) {
+                        Circle()
+                            .fill(bgColor)
+                            .frame(width: 70, height: 70)
+                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 5, y: 5)
+                            .overlay(
+                                Image(systemName: "arrow.counterclockwise")
+                                    .foregroundColor(accentColor.opacity(0.6))
+                                    .font(.system(size: 20))
+                            )
+                    }
                 }
             }
         }
         .onReceive(timer) { _ in
-            guard isActive else { return }
-            if timeRemaining > 0 {
+            if isActive && timeRemaining > 0 {
                 timeRemaining -= 1
-            } else {
-                isActive = false
             }
         }
     }
     
-    // 秒を「分:秒」の形式に変換
     func formatTime(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let seconds = seconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%02d:%02d", m, s)
     }
     
     func resetTimer() {
