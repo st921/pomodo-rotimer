@@ -6,90 +6,115 @@
 //
 
 import SwiftUI
+import PhotosUI // 写真選択用
 internal import Combine
 
 struct ContentView: View {
     @State private var timeRemaining: CGFloat = 25 * 60
     @State private var isActive = false
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var backgroundImage: Image? = nil
+    
     let totalTime: CGFloat = 25 * 60
-    
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
-    //カラーテーマ（落ち着いたカフェ風）
-    let bgColor = Color(red: 0.95, green: 0.93, blue: 0.90)
-    let accentColor = Color(red: 0.4, green: 0.3, blue: 0.25) //コーヒーブラウン
     
     var body: some View {
         ZStack {
-            //背景色
-            bgColor.ignoresSafeArea()
+            // --- カスタマイズ背景 ---
+            Group {
+                if let backgroundImage = backgroundImage {
+                    backgroundImage
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } else {
+                    Color.black // デフォルトは漆黒
+                }
+            }
+            .ignoresSafeArea()
+            .overlay(Color.black.opacity(0.4)) // 画像を見やすくするために少し暗く
+            .blur(radius: 10) // ぼかしを入れて文字を浮かせる
             
-            VStack(spacing: 50) {
-                //イトル
-                Text(isActive ? "FOCUS TIME" : "READY?")
-                    .font(.system(size: 20, weight: .light, design: .serif))
-                    .tracking(8) //文字間隔を広げておしゃれに
-                    .foregroundColor(accentColor)
-                
-                //メインのタイマー部分
+            VStack(spacing: 60) {
+                // --- ヘッダー（近未来風テキスト） ---
+                HStack {
+                    PhotosPicker(selection: $selectedItem, matching: .images) {
+                        Label("BG SET", systemImage: "photo.stack")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.cyan)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(8)
+                    }
+                    Spacer()
+                    Text("SYSTEM ACTIVE")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundColor(.cyan)
+                        .opacity(isActive ? 1 : 0.3)
+                }
+                .padding(.horizontal, 30)
+
+                // --- メインタイマー（ネオンリング） ---
                 ZStack {
-                    //外側の影（立体感）
+                    // 外側の発光（グローエフェクト）
                     Circle()
-                        .fill(bgColor)
-                        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 10, y: 10)
-                        .shadow(color: Color.white, radius: 10, x: -5, y: -5)
+                        .stroke(Color.cyan.opacity(0.2), lineWidth: 2)
+                        .scaleEffect(1.1)
                     
-                    //進捗リング（細めのラインで洗練された印象に）
+                    // 進捗リング
                     Circle()
                         .trim(from: 0, to: timeRemaining / totalTime)
                         .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [accentColor.opacity(0.6), accentColor]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                            LinearGradient(colors: [.cyan, .blue, .purple], startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
                         )
                         .rotationEffect(.degrees(-90))
-                        .padding(15) //少し内側に配置
-                        .animation(.linear(duration: 1), value: timeRemaining)
+                        .shadow(color: .cyan.opacity(0.8), radius: 10) // ネオンの光
+                        .animation(.easeInOut(duration: 1), value: timeRemaining)
                     
-                    //中央の時間表示
-                    VStack {
-                        Text(formatTime(Int(timeRemaining)))
-                            .font(.system(size: 54, weight: .thin, design: .monospaced))
-                            .foregroundColor(accentColor)
-                    }
+                    // 時間表示
+                    Text(formatTime(Int(timeRemaining)))
+                        .font(.system(size: 70, weight: .thin, design: .monospaced))
+                        .foregroundColor(.white)
+                        .italic()
+                        .shadow(color: .cyan, radius: 5)
                 }
-                .frame(width: 300, height: 300)
-                
-                //操作ボタン
-                HStack(spacing: 40) {
-                    //再生/一時停止
+                .frame(width: 280, height: 280)
+
+                // --- 操作パネル ---
+                HStack(spacing: 50) {
+                    Button(action: resetTimer) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 25))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    
                     Button(action: { isActive.toggle() }) {
                         Circle()
-                            .fill(bgColor)
-                            .frame(width: 70, height: 70)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 5, y: 5)
+                            .fill(.ultraThinMaterial)
+                            .frame(width: 90, height: 90)
                             .overlay(
-                                Image(systemName: isActive ? "pause" : "play.fill")
-                                    .foregroundColor(accentColor)
-                                    .font(.system(size: 24))
+                                Image(systemName: isActive ? "pause.fill" : "play.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.cyan)
                             )
+                            .shadow(color: .cyan.opacity(0.5), radius: 15)
                     }
                     
-                    //セット
-                    Button(action: resetTimer) {
-                        Circle()
-                            .fill(bgColor)
-                            .frame(width: 70, height: 70)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 5, y: 5)
-                            .overlay(
-                                Image(systemName: "arrow.counterclockwise")
-                                    .foregroundColor(accentColor.opacity(0.6))
-                                    .font(.system(size: 20))
-                            )
+                    // 完了ボタン（10秒お試し用などのショートカットも可）
+                    Button(action: {}) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 25))
+                            .foregroundColor(.white.opacity(0.6))
                     }
+                }
+            }
+        }
+        // 写真選択時の処理
+        .onChange(of: selectedItem) { newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    backgroundImage = Image(uiImage: uiImage)
                 }
             }
         }
