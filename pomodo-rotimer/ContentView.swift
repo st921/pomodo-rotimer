@@ -60,7 +60,7 @@ struct ContentView: View {
                         .stroke(Color.cyan.opacity(0.2), lineWidth: 2)
                         .scaleEffect(1.1)
                     
-                    // 進捗リング
+                    //進捗リング
                     Circle()
                         .trim(from: 0, to: timeRemaining / totalTime)
                         .stroke(
