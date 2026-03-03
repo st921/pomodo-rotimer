@@ -71,7 +71,7 @@ struct ContentView: View {
                         .shadow(color: .cyan.opacity(0.8), radius: 10) // ネオンの光
                         .animation(.easeInOut(duration: 1), value: timeRemaining)
                     
-                    // 時間表示
+                    //時間表示
                     Text(formatTime(Int(timeRemaining)))
                         .font(.system(size: 70, weight: .thin, design: .monospaced))
                         .foregroundColor(.white)
