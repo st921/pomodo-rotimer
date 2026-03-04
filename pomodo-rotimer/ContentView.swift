@@ -80,7 +80,7 @@ struct ContentView: View {
                 }
                 .frame(width: 280, height: 280)
 
-                // --- 操作パネル ---
+                //--- 操作パネル ---
                 HStack(spacing: 50) {
                     Button(action: resetTimer) {
                         Image(systemName: "arrow.triangle.2.circlepath")
