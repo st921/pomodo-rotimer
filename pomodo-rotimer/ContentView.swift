@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import PhotosUI // 写真選択用
+import PhotosUI //写真選択用
 internal import Combine
 
 struct ContentView: View {
