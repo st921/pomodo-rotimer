@@ -20,7 +20,7 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            // --- カスタマイズ背景 ---
+            //--- カスタマイズ背景 ---
             Group {
                 if let backgroundImage = backgroundImage {
                     backgroundImage
