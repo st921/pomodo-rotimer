@@ -27,7 +27,7 @@ struct ContentView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } else {
-                    Color.black // デフォルトは漆黒
+                    Color.black //デフォルトは漆黒
                 }
             }
             .ignoresSafeArea()
